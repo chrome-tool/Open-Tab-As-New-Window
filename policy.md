@@ -1,4 +1,4 @@
-# Xiaohongshu Privacy Policy
+# Privacy Policy
 
 ## Acquisition of user information
   This site does not acquire the user's personal information.
