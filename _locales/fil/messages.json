@@ -1,6 +1,6 @@
 {
    "extDescription": {
-      "message": "Tab To Popup Window is a browser extension that allows users to quickly convert the current tab into a standalone popup window."
+      "message": "Quickly convert any tab into a standalone popup window. Supports batch conversion and shortcut customization."
    },
    "extName": {
       "message": "Tab To Popup Window"
