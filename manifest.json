@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extName__",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "default_locale": "en",
   "description": "__MSG_extDescription__",
   "permissions": ["contextMenus"],
@@ -15,6 +15,10 @@
   },
   "action": {
     "default_title": "Toggle Tab To Window"
+  },
+  "options_ui": {
+    "page": "settings.html",
+    "open_in_tab": true
   },
   "commands": {
     "toggle_window": {

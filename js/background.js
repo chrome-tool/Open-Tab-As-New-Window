@@ -2,14 +2,12 @@ class Win2Pop {
   constructor() {
     this.map = new Map();
 
-    chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
+    chrome.tabs.onRemoved.addListener((tabId) => {
       this.map.delete(tabId);
     });
 
     chrome.action.onClicked.addListener((tab) => {
-      chrome.windows.get(tab.windowId, (window) => {
-        this.tab2Win(tab, window);
-      });
+      this.execute(tab);
     });
 
     chrome.contextMenus.removeAll(() => {
@@ -17,14 +15,26 @@ class Win2Pop {
         id: "toggle_window",
         title: "Toggle Open As Window",
         type: "normal",
-        contexts: ["all"],
+        contexts: ["all", "action"],
+      });
+      chrome.contextMenus.create({
+        id: "batch_to_window",
+        title: "Move All Tabs to New Window",
+        type: "normal",
+        contexts: ["all", "action"],
       });
     });
 
     chrome.contextMenus.onClicked.addListener((info, tab) => {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        this.execute(tabs[0]);
-      });
+      if (info.menuItemId === "toggle_window") {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          this.execute(tabs[0]);
+        });
+      } else if (info.menuItemId === "batch_to_window") {
+        chrome.tabs.query({ currentWindow: true }, (tabs) => {
+          this.batchToWindow(tabs);
+        });
+      }
     });
 
     chrome.commands.onCommand.addListener((command) => {
@@ -52,43 +62,57 @@ class Win2Pop {
       data.tabId = tab.id;
       this.map.set(tab.id, window.id);
     }
-
-    if (window && window.state === "normal") {
+    if (window) {
       data.top = window.top;
       data.left = window.left;
       data.width = window.width;
       data.height = window.height;
     }
-
     chrome.windows.create(data);
+  }
+
+  batchToWindow(tabs) {
+    if (!tabs || tabs.length === 0) return;
+    chrome.windows.getCurrent((window) => {
+      const data = { type: "popup" };
+      if (window) {
+        data.top = window.top;
+        data.left = window.left;
+        data.width = window.width;
+        data.height = window.height;
+      }
+      for (const tab of tabs) {
+        chrome.windows.create({ ...data, tabId: tab.id });
+      }
+    });
   }
 
   win2Tab(tab, popupWindow) {
     const windowId = this.map.get(tab.id);
     if (windowId) {
-      chrome.windows.get(windowId, (w) => {
+      chrome.windows.get(windowId, () => {
         if (!chrome.runtime.lastError) {
-          this.tnwt(tab, windowId);
+          this.moveTabToWindow(tab, windowId);
         } else {
-          this.tnwlf(tab, popupWindow);
+          this.moveToLastFocusedWindow(tab, popupWindow);
         }
       });
     } else {
-      this.tnwlf(tab, popupWindow);
+      this.moveToLastFocusedWindow(tab, popupWindow);
     }
   }
 
-  tnwlf(tab, popupWindow) {
+  moveToLastFocusedWindow(tab, popupWindow) {
     chrome.windows.getLastFocused({ windowTypes: ["normal"] }, (window) => {
       if (!chrome.runtime.lastError) {
-        this.tnwt(tab, window.id);
+        this.moveTabToWindow(tab, window.id);
       } else {
-        this.tnwc(tab, popupWindow);
+        this.createNormalWindow(tab, popupWindow);
       }
     });
   }
 
-  tnwc(tab, popupWindow) {
+  createNormalWindow(tab, popupWindow) {
     chrome.windows.create({
       type: "normal",
       state: popupWindow.state,
@@ -96,7 +120,7 @@ class Win2Pop {
     });
   }
 
-  tnwt(tab, windowId) {
+  moveTabToWindow(tab, windowId) {
     chrome.tabs.query({ windowId: windowId, active: true }, (tabs) => {
       chrome.tabs.move(
         tab.id,
@@ -106,7 +130,7 @@ class Win2Pop {
             chrome.tabs.update(tab.id, { active: true });
           }
           chrome.windows.update(windowId, { focused: true });
-        }
+        },
       );
       this.map.delete(tab.id);
     });

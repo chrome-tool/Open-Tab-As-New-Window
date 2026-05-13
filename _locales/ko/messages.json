@@ -1,6 +1,6 @@
 {
    "extDescription": {
-      "message": "Tab To Popup Window is a Chrome extension that allows users to quickly convert the current tab into a standalone popup window."
+      "message": "Tab To Popup Window는 사용자가 현재 탭을 독립형 팝업 창으로 빠르게 변환할 수 있도록 해주는 브라우저 확장 프로그램입니다."
    },
    "extName": {
       "message": "Tab To Popup Window"
